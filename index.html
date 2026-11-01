@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K.G.M V2 - Kartouzo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Empêche le scroll à cause des particules */
+        }
+
+        /* Canvas pour les particules animées */
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+            background: rgba(10, 10, 10, 0.85);
+            border: 1px solid #222;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 1;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.1);
+            animation: slideUp 1s ease-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Animation flottante pour le logo */
+        .logo-container {
+            margin-bottom: 30px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .logo {
+            width: 110px;
+            height: 110px;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+            border: 2px solid #00ffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6), inset 0 0 20px rgba(0, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        /* Halo derrière le logo */
+        .logo::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #00ffff;
+            opacity: 0.5;
+            animation: pulseHalo 2s infinite alternate;
+        }
+
+        @keyframes pulseHalo {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 0; }
+        }
+
+        .logo span {
+            font-size: 28px;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+            letter-spacing: 2px;
+        }
+
+        .title {
+            font-size: 22px;
+            letter-spacing: 4px;
+            color: #fff;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: none;
+            height: 120px;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .btn-send {
+            width: 100%;
+            padding: 16px;
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+            z-index: 1;
+        }
+
+        .btn-send::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent);
+            transition: 0.6s;
+            z-index: -1;
+        }
+
+        .btn-send:hover::before {
+            left: 100%;
+        }
+
+        .btn-send:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .footer {
+            font-size: 10px;
+            color: #444;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .container {
+                width: 90%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas pour l'animation de fond -->
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="container">
+        <!-- 1. Endroit pour le logo -->
+        <div class="logo-container">
+            <div class="logo">
+                <span>KGM</span>
+            </div>
+        </div>
+
+        <div class="title">V2 SYSTEM</div>
+
+        <!-- 2. Endroit pour le numéro -->
+        <div class="input-group">
+            <label>Numéro cible</label>
+            <input type="text" id="targetNumber" placeholder="+225XXXXXXXXXX">
+        </div>
+
+        <!-- 3. Endroit pour le texte et le bouton -->
+        <div class="input-group">
+            <label>Votre message</label>
+            <textarea id="messageText" placeholder="Écrivez votre texte ici..."></textarea>
+        </div>
+
+        <button class="btn-send" onclick="sendBan()">Ban by K.G.M</button>
+
+        <div class="footer">
+            K.G.M V2 © 2024 - Dev_kartouzo
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ⚠️ METS TON EMAIL ICI POUR RECEVOIR LES RÉPONSES ⚠️
+        const myEmail = "ton_email@exemple.com";
+        // ==========================================
+
+        // Fonction pour générer l'email
+        function sendBan() {
+            const num = document.getElementById('targetNumber').value.trim();
+            const text = document.getElementById('messageText').value.trim();
+
+            if (!num) {
+                alert("Wesh, entre le numéro cible d'abord !");
+                return;
+            }
+            if (!text) {
+                alert("Hé, t'as oublié d'écrire ton texte !");
+                return;
+            }
+
+            const email = "support@whatsapp.com";
+            const subject = encodeURIComponent(`Signalement - Numéro ${num} par Kartouzo`);
+            const body = encodeURIComponent(`Numéro signalé : ${num}\n\nMessage : ${text}\n\nCordialement,\nKartouzo (K.G.M System)`);
+
+            // Envoi via mailto (ouvre l'app mail)
+            window.location.href = `mailto:${email}?from=${myEmail}&subject=${subject}&body=${body}`;
+        }
+
+        // ==========================================
+        // CODE POUR L'ANIMATION DE PARTICULES DE FOND
+        // ==========================================
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.color = `rgba(0, 255, 255, ${Math.random() * 0.5 + 0.1})`;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.floor(window.innerWidth / 10); // Densité
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                // Lignes de connexion (effet réseau)
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 255, 255, ${1 - distance/100})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+        
+        // Re-init les particules si la fenêtre change de taille
+        window.addEventListener('resize', initParticles);
+
+    </script>
+</body>
+</html>
